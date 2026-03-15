@@ -1827,6 +1827,16 @@ export class BattleActions {
 			this.battle.add('-zbroken', target);
 		}
 
+		// # START-OF-POKEMON-CUSTOM: final damage multiplier controlled by custom type command
+		const customTypeDamageModifier = (this.battle as {
+			customTypeDamageModifiers?: Record<string, number>,
+		}).customTypeDamageModifiers?.[toID(type)];
+		if (customTypeDamageModifier && customTypeDamageModifier !== 1) {
+			this.battle.debug(`Custom type damage modifier (${type}): ${customTypeDamageModifier}`);
+			baseDamage = this.battle.modify(baseDamage, customTypeDamageModifier);
+		}
+		// # END-OF-POKEMON-CUSTOM
+
 		// Generation 6-7 moves the check for minimum 1 damage after the final modifier...
 		if (this.battle.gen !== 5 && !baseDamage) return 1;
 

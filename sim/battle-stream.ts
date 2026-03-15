@@ -97,6 +97,38 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		this.push(`${type}\n${data}`);
 	}
 
+	// # START-OF-POKEMON-CUSTOM: custom command to adjust damage by move type
+	updateTypeDamageModifier(action: 'increase' | 'decrease' | 'reset', message: string) {
+		if (!this.battle) {
+			throw new Error(`Battle has not started; cannot run "${action}" command.`);
+		}
+
+		const parts = message.trim().split(/\s+/);
+		if (parts.length !== 2 || parts[0] !== 'damage') {
+			throw new Error(`Invalid "${action}" command syntax. Expected ">${action} damage <type>".`);
+		}
+
+		const typeToken = parts[1];
+		const typeId = this.battle.toID(typeToken);
+		const type = this.battle.dex.types.get(typeId);
+		if (!type.exists) {
+			throw new Error(`Unknown type "${typeToken}" in "${action}" command.`);
+		}
+
+		const battleWithCustomModifiers = this.battle as Battle & {
+			customTypeDamageModifiers?: Record<string, number>,
+		};
+		if (!battleWithCustomModifiers.customTypeDamageModifiers) {
+			battleWithCustomModifiers.customTypeDamageModifiers = {};
+		}
+
+		const modifier = action === 'increase' ? 2 : action === 'decrease' ? 0.5 : 1;
+		battleWithCustomModifiers.customTypeDamageModifiers[type.id] = modifier;
+		this.battle.inputLog.push(`>${action} damage ${type.id}`);
+		this.battle.add('message', `${type.name}-type damage modifier set to ${modifier}x.`);
+	}
+	// # END-OF-POKEMON-CUSTOM
+
 	_writeLine(type: string, message: string) {
 		switch (type) {
 		case 'start':
@@ -227,6 +259,13 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		case 'show-openteamsheets':
 			this.battle!.showOpenTeamSheets();
 			break;
+		// # START-OF-POKEMON-CUSTOM: parser support for ">increase/decrease/reset damage <type>"
+		case 'increase':
+		case 'decrease':
+		case 'reset':
+			this.updateTypeDamageModifier(type, message);
+			break;
+		// # END-OF-POKEMON-CUSTOM
 		case 'version':
 		case 'version-origin':
 			break;
