@@ -97,7 +97,7 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		this.push(`${type}\n${data}`);
 	}
 
-	// # START-OF-POKEMON-CUSTOM: custom command helpers for damage modifiers and free Substitute
+	// # START-OF-POKEMON-CUSTOM: custom command helpers for damage modifiers, burn status, and free Substitute
 	updateTypeDamageModifier(action: 'increase' | 'decrease' | 'reset', message: string) {
 		if (!this.battle) {
 			throw new Error(`Battle has not started; cannot run "${action}" command.`);
@@ -126,6 +126,47 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		battleWithCustomModifiers.customTypeDamageModifiers[type.id] = modifier;
 		this.battle.inputLog.push(`>${action} damage ${type.id}`);
 		this.battle.add('message', `${type.name}-type damage modifier set to ${modifier}x.`);
+	}
+
+	updateBurnStatus(action: 'apply' | 'clear', message: string) {
+		// Blaine Gym Leader support for Week 5 only. Remove this custom command after Week 5.
+		if (!this.battle) {
+			throw new Error(`Battle has not started; cannot run "${action}" burn command.`);
+		}
+
+		const parts = message.trim().split(/\s+/);
+		if (parts.length !== 2 || parts[0] !== 'burn') {
+			throw new Error(`Invalid "${action}" command syntax. Expected ">${action} burn <side>".`);
+		}
+
+		const sideToken = this.battle.toID(parts[1]);
+		if (!/^p[1-4]$/.test(sideToken)) {
+			throw new Error(`Invalid side "${parts[1]}". Expected one of p1, p2, p3, or p4.`);
+		}
+
+		const side = this.battle.sides[parseInt(sideToken.slice(1)) - 1];
+		if (!side) {
+			throw new Error(`Side "${sideToken}" is not available in this battle.`);
+		}
+
+		const active = side.active?.[0];
+		if (!active || active.fainted) {
+			throw new Error(`Side "${sideToken}" has no active Pokemon to update.`);
+		}
+
+		if (action === 'apply') {
+			if (!active.status && !active.hasType('Fire')) {
+				const burn = this.battle.dex.conditions.get('brn');
+				active.status = burn.id;
+				active.statusState = this.battle.initEffectState({id: burn.id, target: active});
+				active.statusState.source = active;
+				active.modifyStat?.('atk', 0.5);
+			}
+		} else if (active.status === 'brn') {
+			active.clearStatus();
+		}
+
+		this.battle.inputLog.push(`>${action} burn ${sideToken}`);
 	}
 
 	applyFreeSubstitute(message: string) {
@@ -299,6 +340,11 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		case 'decrease':
 		case 'reset':
 			this.updateTypeDamageModifier(type, message);
+			break;
+		case 'apply':
+		case 'clear':
+			// Blaine Gym Leader support for Week 5 only. Remove this parser branch after Week 5.
+			this.updateBurnStatus(type, message);
 			break;
 		case 'free':
 			this.applyFreeSubstitute(message);
