@@ -98,14 +98,18 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 	}
 
 	// # START-OF-POKEMON-CUSTOM: custom command helpers for damage modifiers, burn status, and free Substitute
-	updateTypeDamageModifier(action: 'increase' | 'decrease' | 'reset', message: string) {
+	updateTypeDamageModifier(action: 'increase' | 'decrease' | 'reset' | 'set', message: string) {
 		if (!this.battle) {
 			throw new Error(`Battle has not started; cannot run "${action}" command.`);
 		}
 
 		const parts = message.trim().split(/\s+/);
-		if (parts.length !== 2 || parts[0] !== 'damage') {
-			throw new Error(`Invalid "${action}" command syntax. Expected ">${action} damage <type>".`);
+		if ((action === 'set' && parts.length !== 3) || (action !== 'set' && parts.length !== 2) || parts[0] !== 'damage') {
+			throw new Error(
+				action === 'set'
+					? 'Invalid "set" command syntax. Expected ">set damage <type> <multiplier>".'
+					: `Invalid "${action}" command syntax. Expected ">${action} damage <type>".`,
+			);
 		}
 
 		const typeToken = parts[1];
@@ -122,9 +126,17 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 			battleWithCustomModifiers.customTypeDamageModifiers = {};
 		}
 
-		const modifier = action === 'increase' ? 2 : action === 'decrease' ? 0.5 : 1;
+		let modifier = action === 'increase' ? 2 : action === 'decrease' ? 0.5 : 1;
+		if (action === 'set') {
+			modifier = Number(parts[2]);
+			if (!Number.isFinite(modifier) || modifier <= 0) {
+				throw new Error(`Invalid damage modifier "${parts[2]}".`);
+			}
+		}
 		battleWithCustomModifiers.customTypeDamageModifiers[type.id] = modifier;
-		this.battle.inputLog.push(`>${action} damage ${type.id}`);
+		this.battle.inputLog.push(
+			action === 'set' ? `>${action} damage ${type.id} ${modifier}` : `>${action} damage ${type.id}`,
+		);
 		this.battle.add('message', `${type.name}-type damage modifier set to ${modifier}x.`);
 	}
 
@@ -167,6 +179,70 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		}
 
 		this.battle.inputLog.push(`>${action} burn ${sideToken}`);
+	}
+
+	// Giovanni Gym Battle support. Remove this custom damage command after the Giovanni gym battle is over.
+	applyDirectDamage(message: string) {
+		if (!this.battle) {
+			throw new Error('Battle has not started; cannot run "damage" command.');
+		}
+
+		const parts = message.trim().split(/\s+/);
+		if (parts.length < 2 || parts.length > 4) {
+			throw new Error('Invalid "damage" command syntax. Expected ">damage <side> <amount> [sourceSide] [effect]".');
+		}
+
+		const sideToken = this.battle.toID(parts[0]);
+		if (!/^p[1-4]$/.test(sideToken)) {
+			throw new Error(`Invalid side "${parts[0]}". Expected one of p1, p2, p3, or p4.`);
+		}
+
+		const amount = Number(parts[1]);
+		if (!Number.isFinite(amount) || amount <= 0) {
+			throw new Error(`Invalid damage amount "${parts[1]}".`);
+		}
+
+		const side = this.battle.sides[parseInt(sideToken.slice(1)) - 1];
+		if (!side) {
+			throw new Error(`Side "${sideToken}" is not available in this battle.`);
+		}
+
+		const target = side.active?.[0];
+		if (!target || target.fainted) {
+			throw new Error(`Side "${sideToken}" has no active Pokemon to damage.`);
+		}
+
+		let source = null;
+		if (parts[2]) {
+			const sourceSideToken = this.battle.toID(parts[2]);
+			if (!/^p[1-4]$/.test(sourceSideToken)) {
+				throw new Error(`Invalid source side "${parts[2]}". Expected one of p1, p2, p3, or p4.`);
+			}
+			source = this.battle.sides[parseInt(sourceSideToken.slice(1)) - 1]?.active?.[0] || null;
+		}
+
+		let effect = null;
+		if (parts[3]) {
+			const effectToken = this.battle.toID(parts[3]);
+			const move = this.battle.dex.moves.get(effectToken);
+			if (move?.exists) {
+				effect = move;
+			} else {
+				const condition = this.battle.dex.conditions.get(effectToken);
+				effect = condition?.exists ? condition : null;
+			}
+		}
+
+		this.battle.directDamage(Math.trunc(amount), target, source, effect);
+		this.battle.inputLog.push(`>damage ${message}`);
+		// Giovanni Gym Battle support. Remove this direct-damage faint handling after the Giovanni gym battle is over.
+		if (this.battle.faintMessages()) {
+			return;
+		}
+		this.battle.checkFainted();
+		if (!this.battle.ended && !this.battle.requestState) {
+			this.battle.makeRequest('switch');
+		}
 	}
 
 	applyFreeSubstitute(message: string) {
@@ -243,6 +319,14 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		case 'forcelose':
 			this.battle!.lose(message as SideID);
 			this.battle!.inputLog.push(`>forcelose ${message}`);
+			break;
+		case 'damage':
+			// Giovanni Gym Battle support. Remove this custom command branch after the Giovanni gym battle is over.
+			this.applyDirectDamage(message);
+			break;
+		case 'set':
+			// Giovanni Gym Battle support. Remove this custom command branch after the Giovanni gym battle is over.
+			this.updateTypeDamageModifier('set', message);
 			break;
 		case 'reseed':
 			this.battle!.resetRNG(message as PRNGSeed);
