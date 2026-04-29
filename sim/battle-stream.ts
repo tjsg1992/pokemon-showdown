@@ -97,7 +97,7 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		this.push(`${type}\n${data}`);
 	}
 
-	// # START-OF-POKEMON-CUSTOM: custom command helpers for damage modifiers, burn status, and free Substitute
+	// # START-OF-POKEMON-CUSTOM: custom command helpers for damage modifiers, burn status, and free battle effects
 	updateTypeDamageModifier(action: 'increase' | 'decrease' | 'reset' | 'set', message: string) {
 		if (!this.battle) {
 			throw new Error(`Battle has not started; cannot run "${action}" command.`);
@@ -279,6 +279,35 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 
 		this.battle.inputLog.push(`>free substitute ${sideToken}`);
 	}
+
+	applyFreeStringShot(message: string) {
+		if (!this.battle) {
+			throw new Error('Battle has not started; cannot run "free stringshot" command.');
+		}
+
+		const parts = message.trim().split(/\s+/);
+		if (parts.length !== 2 || parts[0] !== 'stringshot') {
+			throw new Error('Invalid "free" command syntax. Expected ">free stringshot <side>".');
+		}
+
+		const sideToken = this.battle.toID(parts[1]);
+		if (!/^p[1-4]$/.test(sideToken)) {
+			throw new Error(`Invalid side "${parts[1]}". Expected one of p1, p2, p3, or p4.`);
+		}
+
+		const side = this.battle.sides[parseInt(sideToken.slice(1)) - 1];
+		if (!side) {
+			throw new Error(`Side "${sideToken}" is not available in this battle.`);
+		}
+
+		const active = side.active?.[0];
+		if (!active || active.fainted) {
+			throw new Error(`Side "${sideToken}" has no active Pokemon to receive String Shot.`);
+		}
+
+		active.boostBy({spe: -2});
+		this.battle.inputLog.push(`>free stringshot ${sideToken}`);
+	}
 	// # END-OF-POKEMON-CUSTOM
 
 	_writeLine(type: string, message: string) {
@@ -431,7 +460,11 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 			this.updateBurnStatus(type, message);
 			break;
 		case 'free':
-			this.applyFreeSubstitute(message);
+			if (message.trim().startsWith('stringshot')) {
+				this.applyFreeStringShot(message);
+			} else {
+				this.applyFreeSubstitute(message);
+			}
 			break;
 		// # END-OF-POKEMON-CUSTOM
 		case 'version':
