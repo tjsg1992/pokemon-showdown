@@ -310,6 +310,28 @@ export const Items: import('../sim/dex-items').ItemDataTable = {
 		num: 153,
 		gen: 3,
 	},
+	milkbottle: {
+		name: "Milk Bottle",
+		spritenum: 448,
+		isBerry: true,
+		naturalGift: {
+			basePower: 80,
+			type: "Psychic",
+		},
+		onUpdate(pokemon) {
+			if (pokemon.hp <= pokemon.maxhp / 2) {
+				pokemon.eatItem();
+			}
+		},
+		onTryEatItem(item, pokemon) {
+			if (!this.runEvent('TryHeal', pokemon, null, this.effect, pokemon.baseMaxhp / 4)) return false;
+		},
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 2);
+		},
+		num: -1001,
+		gen: 9,
+	},
 	assaultvest: {
 		name: "Assault Vest",
 		spritenum: 581,
@@ -5757,6 +5779,28 @@ export const Items: import('../sim/dex-items').ItemDataTable = {
 		},
 		num: 158,
 		gen: 3,
+	},
+	milkbottle: {
+		name: "Milk Bottle",
+		spritenum: 448,
+		isBerry: true,
+		naturalGift: {
+			basePower: 80,
+			type: "Psychic",
+		},
+		onUpdate(pokemon) {
+			if (pokemon.hp <= pokemon.maxhp / 2) {
+				pokemon.eatItem();
+			}
+		},
+		onTryEatItem(item, pokemon) {
+			if (!this.runEvent('TryHeal', pokemon, null, this.effect, pokemon.baseMaxhp / 4)) return false;
+		},
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 2);
+		},
+		num: -1001,
+		gen: 9,
 	},
 	skarmorite: {
 		name: "Skarmorite",
