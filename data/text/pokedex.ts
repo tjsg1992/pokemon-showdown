@@ -383,6 +383,9 @@ export const PokedexText: { [id: IDEntry]: PokedexText } = {
 	slowpoke: {
 		name: "Slowpoke",
 	},
+	missingtailslowpoke: {
+		name: "Missing Tail Slowpoke",
+	},
 	slowpokegalar: {
 		name: "Slowpoke-Galar",
 	},
@@ -496,6 +499,9 @@ export const PokedexText: { [id: IDEntry]: PokedexText } = {
 	},
 	marowak: {
 		name: "Marowak",
+	},
+	avengedmarowak: {
+		name: "Avenged Marowak",
 	},
 	marowakalola: {
 		name: "Marowak-Alola",
@@ -787,6 +793,9 @@ export const PokedexText: { [id: IDEntry]: PokedexText } = {
 	},
 	sudowoodo: {
 		name: "Sudowoodo",
+	},
+	spookywoodo: {
+		name: "Spookywoodo",
 	},
 	politoed: {
 		name: "Politoed",
