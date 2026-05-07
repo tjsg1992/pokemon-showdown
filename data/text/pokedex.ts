@@ -383,8 +383,8 @@ export const PokedexText: { [id: IDEntry]: PokedexText } = {
 	slowpoke: {
 		name: "Slowpoke",
 	},
-	missingtailslowpoke: {
-		name: "Missing Tail Slowpoke",
+	taillessslowpoke: {
+		name: "Tailless Slowpoke",
 	},
 	slowpokegalar: {
 		name: "Slowpoke-Galar",

@@ -1918,9 +1918,9 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		otherFormes: ["Slowpoke-Galar"],
 		formeOrder: ["Slowpoke", "Slowpoke-Galar"],
 	},
-	missingtailslowpoke: {
+	taillessslowpoke: {
 		num: 9002,
-		name: "Missing Tail Slowpoke",
+		name: "Tailless Slowpoke",
 		types: ["Water", "Ghost"],
 		baseStats: { hp: 90, atk: 65, def: 65, spa: 40, spd: 40, spe: 15 },
 		abilities: { 0: "Oblivious", 1: "Own Tempo", H: "Regenerator" },

@@ -11370,7 +11370,7 @@ export const Learnsets: import('../sim/dex-species').LearnsetDataTable = {
 			{generation: 1, level: 15},
 		],
 	},
-	missingtailslowpoke: {
+	taillessslowpoke: {
 		learnset: {
 			afteryou: ["7T", "6T", "5T"],
 			amnesia: ["9M", "9L27", "8M", "8L27", "8V", "7L41", "7V", "6L41", "5L41", "4L43", "3L36"],
