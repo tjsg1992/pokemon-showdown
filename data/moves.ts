@@ -18151,17 +18151,13 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			// this is a side condition
 			onSideStart(side) {
 				this.add('-sidestart', side, 'Spikes');
-				this.effectState.layers = 1;
 			},
 			onSideRestart(side) {
-				if (this.effectState.layers >= 3) return false;
-				this.add('-sidestart', side, 'Spikes');
-				this.effectState.layers++;
+				return false;
 			},
 			onSwitchIn(pokemon) {
 				if (!pokemon.isGrounded() || pokemon.hasItem('heavydutyboots')) return;
-				const damageAmounts = [0, 3, 4, 6]; // 1/8, 1/6, 1/4
-				this.damage(damageAmounts[this.effectState.layers] * pokemon.maxhp / 24);
+				this.damage(pokemon.maxhp / 8);
 			},
 		},
 		secondary: null,
