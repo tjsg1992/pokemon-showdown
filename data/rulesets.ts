@@ -1381,6 +1381,28 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			this.supportCancel = true;
 		},
 	},
+	stadiumbaseppmod: {
+		effectType: 'Rule',
+		name: 'Stadium Base PP Mod',
+		desc: "Makes moves start with base PP instead of PP-Up-boosted PP.",
+		onBegin() {
+			this.add('rule', 'Stadium Base PP Mod: Moves use base PP without PP Ups');
+			for (const pokemon of this.getAllPokemon()) {
+				for (const [index, moveSlot] of pokemon.baseMoveSlots.entries()) {
+					const move = this.dex.moves.get(moveSlot.id);
+					if (!move.id) continue;
+					const basepp = move.pp;
+					moveSlot.pp = basepp;
+					moveSlot.maxpp = basepp;
+					const activeMoveSlot = pokemon.moveSlots[index];
+					if (activeMoveSlot?.id === moveSlot.id) {
+						activeMoveSlot.pp = basepp;
+						activeMoveSlot.maxpp = basepp;
+					}
+				}
+			}
+		},
+	},
 	sleepclausemod: {
 		effectType: 'Rule',
 		name: 'Sleep Clause Mod',
