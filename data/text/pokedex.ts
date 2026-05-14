@@ -290,6 +290,9 @@ export const PokedexText: { [id: IDEntry]: PokedexText } = {
 	primeape: {
 		name: "Primeape",
 	},
+	chuck: {
+		name: "Chuck",
+	},
 	growlithe: {
 		name: "Growlithe",
 	},

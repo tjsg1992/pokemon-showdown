@@ -1453,6 +1453,17 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		evos: ["Annihilape"],
 		eggGroups: ["Field"],
 	},
+	chuck: {
+		num: 9004,
+		name: "Chuck",
+		types: ["Fighting"],
+		baseStats: { hp: 65, atk: 105, def: 60, spa: 60, spd: 70, spe: 95 },
+		abilities: { 0: "Vital Spirit", 1: "Anger Point", H: "Defiant" },
+		heightm: 1,
+		weightkg: 32,
+		color: "Brown",
+		eggGroups: ["Field"],
+	},
 	growlithe: {
 		num: 58,
 		name: "Growlithe",
