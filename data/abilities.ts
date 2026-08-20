@@ -1269,6 +1269,72 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 2,
 		num: 49,
 	},
+	flanneryhotspring: {
+		onResidualOrder: 5,
+		onResidualSubOrder: 3,
+		onResidual(pokemon) {
+			const carriers = this.getAllActive().filter((active: any) => {
+				const extras = active.m?.stadiumExtraAbilities || [];
+				return !active.fainted && extras.includes('flanneryhotspring') && !active.ignoringAbility();
+			});
+			if (carriers[0] !== pokemon) return;
+
+			for (const target of this.getAllActive()) {
+				if (target.fainted || !target.hp) continue;
+				this.heal(target.baseMaxhp / 16, target, pokemon, this.effect);
+
+				if (target.status === 'slp') continue;
+				if (target.m?.flanneryHotSpringSleeping) continue;
+
+				const turns = Math.max(0, Number(target.m?.flanneryHotSpringTurns || 0));
+				const nextTurn = Math.min(5, turns + 1);
+				target.m.flanneryHotSpringTurns = nextTurn;
+				if (nextTurn === 5 && !target.status && target.setStatus('slp', pokemon, this.effect)) {
+					target.m.flanneryHotSpringSleeping = true;
+				}
+			}
+		},
+		onAnyBeforeMovePriority: 9,
+		onAnyBeforeMove(pokemon) {
+			if (!pokemon?.isActive || pokemon.fainted || pokemon.status === 'slp') return;
+			if (!Number(pokemon.m?.flanneryHotSpringTurns)) pokemon.m.flanneryHotSpringTurns = 1;
+
+			if (pokemon.m?.flanneryHotSpringSleeping) {
+				pokemon.m.flanneryHotSpringTurns = 1;
+				delete pokemon.m.flanneryHotSpringSleeping;
+				return;
+			}
+
+			const carriers = this.getAllActive().filter((active: any) => {
+				const extras = active.m?.stadiumExtraAbilities || [];
+				return !active.fainted && extras.includes('flanneryhotspring') && !active.ignoringAbility();
+			});
+			if (carriers[0] !== this.effectState.target) return;
+
+			const turns = Number(pokemon.m?.flanneryHotSpringTurns || 0);
+			if (turns === 3) {
+				this.add('cant', pokemon, 'ability: Flannery Hot Spring', `[of] ${carriers[0]}`);
+				return false;
+			}
+		},
+		onSwitchIn(pokemon) {
+			if (!pokemon?.m) return;
+			pokemon.m.flanneryHotSpringTurns = 0;
+			delete pokemon.m.flanneryHotSpringSleeping;
+		},
+		onSwitchOut(pokemon) {
+			if (!pokemon?.m) return;
+			pokemon.m.flanneryHotSpringTurns = 0;
+			delete pokemon.m.flanneryHotSpringSleeping;
+		},
+		isNonstandard: "Custom",
+		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, notransform: 1 },
+		name: "Flannery Hot Spring",
+		shortDesc: "Flannery Gym-only: heals active Pokemon, misses turn 3, then sleeps at the end of turn 4 and cycles.",
+		desc: "During a Flannery Gym battle, while an active Pokemon carries this effect, all active Pokemon heal 1/16 of their maximum HP each turn. Each active Pokemon misses turn 3, acts on turn 4, falls asleep at the end of turn 4 for standard Showdown's sleep duration, and resumes at turn 1 after waking. Switching resets the count.",
+		rating: 0,
+		num: -1001,
+	},
 	flareboost: {
 		onBasePowerPriority: 19,
 		onBasePower(basePower, attacker, defender, move) {

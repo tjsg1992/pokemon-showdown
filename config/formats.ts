@@ -17,6 +17,35 @@ New sections will be added to the bottom of the specified column.
 The column value will be ignored for repeat sections.
 */
 
+const stadiumGymAbilityHandlers = {
+	onBegin(this: any) {
+		for (const pokemon of this.getAllPokemon()) {
+			const sideAbilities = this.stadiumExtraAbilities?.[pokemon.side.id] || {};
+			const slot = String(pokemon.side.pokemon.indexOf(pokemon) + 1);
+			pokemon.m.stadiumExtraAbilities = (sideAbilities[slot] || []).map((ability: string) => this.toID(ability));
+		}
+	},
+	onBeforeSwitchIn(this: any, pokemon: any) {
+		const sideAbilities = this.stadiumExtraAbilities?.[pokemon.side.id] || {};
+		const slot = String(pokemon.side.pokemon.indexOf(pokemon) + 1);
+		const extras = pokemon.m.stadiumExtraAbilities || (sideAbilities[slot] || []).map((ability: string) => this.toID(ability));
+		pokemon.m.stadiumExtraAbilities = extras;
+		for (const ability of extras) {
+			const effect = 'ability:' + this.toID(ability);
+			if (!pokemon.volatiles[effect]) pokemon.volatiles[effect] = this.initEffectState({ id: effect, target: pokemon });
+		}
+	},
+	onSwitchOut(this: any, pokemon: any) {
+		for (const ability of pokemon.m.stadiumExtraAbilities || []) pokemon.removeVolatile('ability:' + ability);
+	},
+	onFaint(this: any, pokemon: any) {
+		for (const ability of pokemon.m.stadiumExtraAbilities || []) {
+			const effect = this.dex.conditions.get('ability:' + ability);
+			if (effect) this.singleEvent('End', effect, null, pokemon);
+		}
+	},
+};
+
 export const Formats: import('../sim/dex-formats').FormatList = [
 
 	// S/V Singles
@@ -160,6 +189,15 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		// no restrictions, for serious (other than team preview)
 		ruleset: ['Team Preview', 'Cancel Mod', 'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
 	},
+	{
+		name: "[Gen 9] Stadium Gym Custom Game",
+		mod: 'stadiumgym',
+		searchShow: false,
+		debug: true,
+		battle: { trunc: Math.trunc },
+		...stadiumGymAbilityHandlers,
+		ruleset: ['Team Preview', 'Cancel Mod', 'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
+	},
 
 	// S/V Doubles
 	///////////////////////////////////////////////////////////////////
@@ -263,6 +301,16 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		battle: { trunc: Math.trunc },
 		debug: true,
 		// no restrictions, for serious (other than team preview)
+		ruleset: ['Team Preview', 'Cancel Mod', 'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
+	},
+	{
+		name: "[Gen 9] Doubles Stadium Gym Custom Game",
+		mod: 'stadiumgym',
+		gameType: 'doubles',
+		searchShow: false,
+		battle: { trunc: Math.trunc },
+		debug: true,
+		...stadiumGymAbilityHandlers,
 		ruleset: ['Team Preview', 'Cancel Mod', 'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
 	},
 

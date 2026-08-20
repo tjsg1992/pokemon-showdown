@@ -61,6 +61,7 @@ export function extractChannelMessages<T extends ChannelID | -1>(message: string
 interface BattleOptions {
 	format?: Format;
 	formatid: ID;
+	stadiumExtraAbilities?: Record<string, Record<string, string[]>>;
 	/** Output callback */
 	send?: (type: string, data: string | string[]) => void;
 	prng?: PRNG; // PRNG override (you usually don't need this, just pass a seed)
@@ -114,6 +115,7 @@ export class Battle {
 	readonly strictChoices: boolean;
 	readonly format: Format;
 	readonly formatData: EffectState;
+	stadiumExtraAbilities: Record<string, Record<string, string[]>>;
 	readonly gameType: GameType;
 	/**
 	 * The number of active pokemon per half-field.
@@ -215,6 +217,7 @@ export class Battle {
 		this.deserialized = !!options.deserialized;
 		this.strictChoices = !!options.strictChoices;
 		this.formatData = this.initEffectState({ id: format.id });
+		this.stadiumExtraAbilities = options.stadiumExtraAbilities || {};
 		this.gameType = (format.gameType || 'singles');
 		this.field = new Field(this);
 		this.sides = Array(format.playerCount).fill(null) as any;
