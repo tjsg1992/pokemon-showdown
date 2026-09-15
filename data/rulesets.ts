@@ -1403,6 +1403,21 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			}
 		},
 	},
+	season4rotomtypemod: {
+		effectType: 'Rule',
+		name: 'Season 4 Rotom Type Mod',
+		desc: "Season 4 treats every Rotom appliance as Electric/Ghost.",
+		onBegin() {
+			this.add('rule', 'Season 4 Rotom Type Mod: Rotom appliances are Electric/Ghost');
+		},
+		onModifySpeciesPriority: 2,
+		onModifySpecies(species) {
+			if (species.baseSpecies !== 'Rotom' && species.name !== 'Rotom') return species;
+			const newSpecies = this.dex.deepClone(species);
+			newSpecies.types = ['Electric', 'Ghost'];
+			return newSpecies;
+		},
+	},
 	sleepclausemod: {
 		effectType: 'Rule',
 		name: 'Sleep Clause Mod',
