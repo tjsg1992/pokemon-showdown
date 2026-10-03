@@ -1434,7 +1434,11 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 				for (const pokemon of target.side.pokemon) {
 					if (pokemon.hp && pokemon.status === 'slp') {
 						if (!pokemon.statusState.source?.isAlly(pokemon)) {
-							this.add('-message', 'Sleep Clause Mod activated.');
+							const reminderKey = `sleepClauseReminderShown:${target.side.id}`;
+							if (!this.effectState[reminderKey]) {
+								this.add('-message', `Sleep Clause prevents ${target.name} from falling asleep!`);
+								this.effectState[reminderKey] = true;
+							}
 							this.hint("Sleep Clause Mod prevents players from putting more than one of their opponent's Pokémon to sleep at a time");
 							return false;
 						}

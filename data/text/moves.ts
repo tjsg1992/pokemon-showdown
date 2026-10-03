@@ -2347,8 +2347,8 @@ export const MovesText: { [id: IDEntry]: MoveText } = {
 	},
 	frustration: {
 		name: "Frustration",
-		desc: "Power is equal to the greater of ((255 - user's Happiness) * 2/5), rounded down, or 1.",
-		shortDesc: "Max 102 power at minimum Happiness.",
+		desc: "This move always has 102 power.",
+		shortDesc: "Always has 102 power.",
 	},
 	furyattack: {
 		name: "Fury Attack",
@@ -5268,8 +5268,8 @@ export const MovesText: { [id: IDEntry]: MoveText } = {
 	},
 	return: {
 		name: "Return",
-		desc: "Power is equal to the greater of (user's Happiness * 2/5), rounded down, or 1.",
-		shortDesc: "Max 102 power at maximum Happiness.",
+		desc: "This move always has 102 power.",
+		shortDesc: "Always has 102 power.",
 	},
 	revelationdance: {
 		name: "Revelation Dance",

@@ -1,5 +1,6 @@
 /** Gym-only additive ability support. */
 export const Scripts: ModdedBattleScriptsData = {
+	inherit: 'stadiumseason4',
 	gen: 9,
 	pokemon: {
 		_getStadiumExtraAbilities(this: any) {

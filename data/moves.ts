@@ -6491,9 +6491,10 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 	frustration: {
 		num: 218,
 		accuracy: 100,
-		basePower: 0,
-		basePowerCallback(pokemon) {
-			return Math.floor(((255 - pokemon.happiness) * 10) / 25) || 1;
+		basePower: 102,
+		// Showdown also calls this callback when building party and move requests.
+		basePowerCallback() {
+			return 102;
 		},
 		category: "Physical",
 		isNonstandard: "Past",
@@ -15571,9 +15572,10 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 	return: {
 		num: 216,
 		accuracy: 100,
-		basePower: 0,
-		basePowerCallback(pokemon) {
-			return Math.floor((pokemon.happiness * 10) / 25) || 1;
+		basePower: 102,
+		// Showdown also calls this callback when building party and move requests.
+		basePowerCallback() {
+			return 102;
 		},
 		category: "Physical",
 		isNonstandard: "Past",

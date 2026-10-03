@@ -10,12 +10,26 @@ describe('Sleep Clause Mod', () => {
 
 	it('should prevent players from putting more than one of foe\'s Pokemon to sleep', () => {
 		battle = common.createBattle({ sleepClause: true });
-		battle.setPlayer('p1', { team: [{ species: "Paras", moves: ['spore'] }] });
-		battle.setPlayer('p2', { team: [{ species: "Magikarp", moves: ['splash'] }, { species: "Feebas", moves: ['splash'] }] });
+		battle.setPlayer('p1', { team: [{ species: "Eevee", moves: ['spore'] }, { species: "Pikachu", moves: ['spore'] }] });
+		battle.setPlayer('p2', { team: [{ species: "Magikarp", moves: ['spore'] }, { species: "Feebas", moves: ['spore'] }] });
 		battle.makeChoices('move spore', 'switch 2');
 		assert.equal(battle.p2.active[0].status, 'slp');
 		battle.makeChoices('move spore', 'switch 2');
 		assert.equal(battle.p2.active[0].status, '');
+		battle.makeChoices('switch 2', 'move spore');
+		assert.equal(battle.p1.active[0].status, 'slp');
+		battle.makeChoices('switch 2', 'move spore');
+		assert.equal(battle.p1.active[0].status, '');
+		battle.makeChoices('move spore', 'move spore');
+
+		const p2Reminders = battle.log.filter(line => line ===
+			'|-message|Sleep Clause prevents Magikarp from falling asleep!'
+		);
+		const p1Reminders = battle.log.filter(line => line ===
+			'|-message|Sleep Clause prevents Eevee from falling asleep!'
+		);
+		assert.equal(p2Reminders.length, 1);
+		assert.equal(p1Reminders.length, 1);
 	});
 
 	it('should not prevent Rest', () => {
